@@ -1,0 +1,155 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vht-redis-service
+  namespace: vht-community
+  labels:
+    app: vht-redis
+spec:
+  selector:
+    app: vht-redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vht-redis
+  namespace: vht-community
+spec:
+  serviceName: vht-redis-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vht-redis
+  template:
+    metadata:
+      labels:
+        app: vht-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vht-postgres-service
+  namespace: vht-community
+  labels:
+    app: vht-postgres
+spec:
+  selector:
+    app: vht-postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vht-postgres
+  namespace: vht-community
+spec:
+  serviceName: vht-postgres-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vht-postgres
+  template:
+    metadata:
+      labels:
+        app: vht-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: vht-platform-secrets
+              key: DATABASE_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: vht-platform-secrets
+              key: DATABASE_PASSWORD
+        - name: POSTGRES_DB
+          value: vht_community
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+          subPath: postgres
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U vht_user -d vht_community
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U vht_user -d vht_community
+          initialDelaySeconds: 10
+          periodSeconds: 5
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 20Gi

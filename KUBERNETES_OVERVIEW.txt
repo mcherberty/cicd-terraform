@@ -1,0 +1,443 @@
+📦 KUBERNETES DEPLOYMENT - COMPLETE SETUP
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PROJECT: VHT Community Learning Platform - 3-Node Kubernetes Cluster
+AUTHOR: Charles Herbert Matovu
+CREATED: January 18, 2026
+PLATFORM: Google Kubernetes Engine (GKE)
+STATUS: ✅ READY FOR DEPLOYMENT
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✨ WHAT'S BEEN CREATED FOR KUBERNETES DEPLOYMENT
+
+📁 Docker Configuration (3 files)
+   ✅ Dockerfile           - Multi-stage Node.js container image
+   ✅ docker-compose.yml   - Local development with Redis & PostgreSQL
+   ✅ .dockerignore        - Build context optimization
+
+☸️  Kubernetes Manifests (4 files in k8s/)
+   ✅ deployment.yaml      - 3-pod deployment with HPA, probes, security
+   ✅ services.yaml        - Redis & PostgreSQL StatefulSets
+   ✅ policies.yaml        - Network policies, quotas, limits
+   ✅ ingress.yaml         - Ingress with TLS, ServiceMonitor
+
+📊 Helm Chart (2 files in helm/vht-platform/)
+   ✅ Chart.yaml           - Helm chart metadata
+   ✅ values.yaml          - Configurable deployment parameters
+
+🏗️  Terraform for GKE (1 file)
+   ✅ kubernetes.tf        - 3-node cluster provisioning on GCP
+
+🔄 Updated CI/CD Pipeline (1 file)
+   ✅ k8s-deploy.yml       - Docker build & Kubernetes deployment workflow
+
+📚 Documentation (1 file)
+   ✅ KUBERNETES_DEPLOYMENT.md - Complete K8s deployment guide
+
+🚀 Quick Start Script (1 file)
+   ✅ k8s-deploy.sh        - One-command K8s cluster deployment
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 3-NODE KUBERNETES CLUSTER CONFIGURATION
+
+Node Specifications
+   Machine Type:          e2-standard-2 (2 vCPU, 8GB RAM each)
+   Node Count:            3 (minimum)
+   Auto-scaling:          3-9 nodes based on resource utilization
+   Total Capacity:        6 vCPU, 24GB RAM base
+
+Pod Deployment
+   VHT Platform:
+   - Replicas:           3 (1 pod per node initially)
+   - Min Replicas:       3 (maintain availability)
+   - Max Replicas:       9 (via HPA)
+   - CPU Requests:       250m per pod
+   - Memory Requests:    256Mi per pod
+   - CPU Limits:         500m per pod
+   - Memory Limits:      512Mi per pod
+
+   Pod Distribution:
+   Node 1: vht-platform-pod-1, redis-0, postgres-0
+   Node 2: vht-platform-pod-2
+   Node 3: vht-platform-pod-3
+
+Supporting Services
+   Redis:                StatefulSet (1 replica)
+   PostgreSQL:           StatefulSet (1 replica)
+   Load Balancer:        Google Cloud Load Balancer
+   Ingress:              Nginx Ingress with TLS
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 QUICK START - DEPLOY IN 5 MINUTES
+
+OPTION 1: Automated Deployment (Linux/Mac)
+───────────────────────────────────────────
+$ chmod +x k8s-deploy.sh
+$ ./k8s-deploy.sh
+
+OPTION 2: Manual Step-by-Step
+──────────────────────────────
+1. Provision cluster:
+   $ terraform apply -var-file=terraform.tfvars
+
+2. Get credentials:
+   $ gcloud container clusters get-credentials vht-learning-platform-dev \
+     --region us-central1 --project YOUR_PROJECT_ID
+
+3. Deploy with Helm:
+   $ helm install vht-platform ./helm/vht-platform \
+     --namespace vht-community --create-namespace
+
+4. Verify:
+   $ kubectl get pods -n vht-community
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📊 DEPLOYMENT ARCHITECTURE
+
+VHT Community Learning Platform on GKE
+│
+├─ GKE Cluster (us-central1)
+│  ├─ 3 Nodes (e2-standard-2)
+│  ├─ VPC Network (10.0.0.0/24)
+│  ├─ Secondary IP ranges (pods, services)
+│  └─ Auto-scaling (3-9 nodes)
+│
+├─ vht-community Namespace
+│  ├─ Deployments
+│  │  └─ vht-platform (3 pods with HPA)
+│  │
+│  ├─ StatefulSets
+│  │  ├─ vht-redis (1 replica, 5Gi storage)
+│  │  └─ vht-postgres (1 replica, 20Gi storage)
+│  │
+│  ├─ Services
+│  │  ├─ vht-platform-service (LoadBalancer)
+│  │  ├─ vht-redis-service (ClusterIP)
+│  │  └─ vht-postgres-service (ClusterIP)
+│  │
+│  ├─ Ingress
+│  │  └─ vht-platform-ingress (TLS via cert-manager)
+│  │
+│  ├─ ConfigMaps
+│  │  └─ vht-platform-config (environment variables)
+│  │
+│  ├─ Secrets
+│  │  └─ vht-platform-secrets (sensitive data)
+│  │
+│  ├─ Network Policies
+│  │  ├─ Pod-to-service communication
+│  │  ├─ Ingress restrictions
+│  │  └─ Egress to dependencies
+│  │
+│  ├─ Resource Quotas
+│  │  └─ CPU: 6 requests, 12 limits
+│  │  └─ Memory: 6Gi requests, 12Gi limits
+│  │
+│  └─ Horizontal Pod Autoscaler
+│     ├─ Target CPU: 70%
+│     ├─ Target Memory: 80%
+│     └─ Scale up/down policies
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🔒 SECURITY FEATURES
+
+Container Security
+   ✓ Non-root user (UID 1001)
+   ✓ Read-only root filesystem
+   ✓ Dropped all capabilities
+   ✓ No privilege escalation
+   ✓ Health checks (liveness & readiness)
+
+Network Security
+   ✓ Network policies (ingress/egress)
+   ✓ Pod-to-pod communication restricted
+   ✓ Service-to-service communication allowed
+   ✓ TLS encryption (cert-manager + Let's Encrypt)
+   ✓ Private cluster recommended
+
+Data Protection
+   ✓ Persistent volumes encrypted
+   ✓ Secrets management (Kubernetes Secrets)
+   ✓ Database credentials in Secrets
+   ✓ API keys in Secrets
+
+Access Control
+   ✓ RBAC (Role-Based Access Control)
+   ✓ Service accounts per component
+   ✓ Workload Identity Federation
+   ✓ Audit logging enabled
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📈 SCALING & AUTO-SCALING
+
+Horizontal Pod Autoscaling (HPA)
+   Metric 1: CPU Utilization
+   - Target: 70%
+   - Scale up when exceeded
+   - Scale down after stabilization
+
+   Metric 2: Memory Utilization
+   - Target: 80%
+   - Scale up when exceeded
+   - Scale down after stabilization
+
+   Behavior:
+   - Min replicas: 3
+   - Max replicas: 9
+   - Scale-up window: 30s (aggressive)
+   - Scale-down window: 5m (conservative)
+
+Node Autoscaling
+   - Minimum nodes: 3
+   - Maximum nodes: 9
+   - Trigger: Pod pending or resource utilization
+   - Cool-down: Built-in delays to prevent flapping
+
+Manual Scaling
+   $ kubectl scale deployment vht-platform --replicas=5 -n vht-community
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📂 KUBERNETES FILES STRUCTURE
+
+cicd-terraform/
+├── Dockerfile                           # Container image
+├── docker-compose.yml                   # Local dev environment
+├── .dockerignore                        # Build context ignore
+├── kubernetes.tf                        # GKE cluster provisioning
+│
+├── k8s/
+│  ├── deployment.yaml                  # App deployment (3 pods)
+│  ├── services.yaml                    # Redis & PostgreSQL
+│  ├── policies.yaml                    # Network policies, quotas
+│  └── ingress.yaml                     # TLS ingress
+│
+├── helm/
+│  └── vht-platform/
+│     ├── Chart.yaml                    # Helm chart metadata
+│     ├── values.yaml                   # Helm configuration
+│     └── templates/                    # (Generated from manifests)
+│
+├── KUBERNETES_DEPLOYMENT.md            # Complete K8s guide
+├── k8s-deploy.sh                       # Quick start script
+└── .github/workflows/
+   └── k8s-deploy.yml                  # CI/CD pipeline
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🔄 CI/CD PIPELINE FOR KUBERNETES
+
+GitHub Actions Workflow: k8s-deploy.yml
+───────────────────────────────────────
+
+Trigger Events:
+   - Push to main or develop branch
+   - Changes to src/, package*.json, Dockerfile, k8s/, helm/
+
+Build Job:
+   1. Checkout code
+   2. Setup Docker Buildx
+   3. Authenticate to GCP
+   4. Extract image metadata
+   5. Build & push Docker image to GCR
+   6. Update Helm values with new image tag
+   7. Commit changes
+
+Deploy Job (main branch only):
+   1. Authenticate to GCP
+   2. Get GKE cluster credentials
+   3. Setup Helm
+   4. Deploy with Helm (auto-update)
+   5. Verify rollout (5m timeout)
+   6. Health checks
+   7. Notification (success/failure)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 PREREQUISITES FOR DEPLOYMENT
+
+Google Cloud Setup
+   ☐ GCP project created
+   ☐ Billing enabled
+   ☐ Service account created
+   ☐ Container Registry enabled
+   ☐ Kubernetes Engine API enabled
+   ☐ Compute Engine API enabled
+
+Local Tools
+   ☐ gcloud CLI installed & authenticated
+   ☐ kubectl installed
+   ☐ helm installed (v3.0+)
+   ☐ docker installed (for local builds)
+   ☐ terraform installed (v1.0+)
+
+GitHub
+   ☐ Repository secrets configured
+   ☐ WIF_PROVIDER configured
+   ☐ WIF_SERVICE_ACCOUNT configured
+   ☐ GitHub Actions enabled
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 STEP-BY-STEP DEPLOYMENT
+
+STEP 1: Initialize GCP
+─────────────────────
+$ gcloud config set project YOUR_PROJECT_ID
+$ gcloud auth application-default login
+
+STEP 2: Create Terraform Variables
+──────────────────────────────────
+Edit terraform.tfvars:
+   gcp_project_id = "your-project-id"
+   cluster_name = "vht-learning-platform"
+   kubernetes_node_count = 3
+   kubernetes_machine_type = "e2-standard-2"
+
+STEP 3: Provision GKE Cluster
+────────────────────────────
+$ terraform init
+$ terraform plan -var-file=terraform.tfvars
+$ terraform apply -var-file=terraform.tfvars
+
+Expected time: 10-15 minutes
+
+STEP 4: Configure kubectl
+─────────────────────────
+$ gcloud container clusters get-credentials vht-learning-platform-dev \
+    --region us-central1 --project YOUR_PROJECT_ID
+$ kubectl cluster-info
+
+STEP 5: Deploy Application
+──────────────────────────
+Option A - Helm (recommended):
+$ helm install vht-platform ./helm/vht-platform \
+    --namespace vht-community --create-namespace
+
+Option B - kubectl:
+$ kubectl apply -f k8s/deployment.yaml
+$ kubectl apply -f k8s/services.yaml
+$ kubectl apply -f k8s/policies.yaml
+
+STEP 6: Verify Deployment
+────────────────────────
+$ kubectl get pods -n vht-community
+$ kubectl get svc -n vht-community
+$ kubectl rollout status deployment/vht-platform -n vht-community
+
+STEP 7: Access Application
+──────────────────────────
+$ kubectl port-forward -n vht-community svc/vht-platform-service 8080:80
+$ curl http://localhost:8080
+
+═══════════════════════════════════════════════════════════════════════════════
+
+💰 ESTIMATED MONTHLY COSTS
+
+Resource                    Est. Cost/Month
+────────────────────────────────────────────
+3x e2-standard-2 Nodes      $60-90
+GKE Management              $74 (standard cluster)
+Network LB                  $16
+Storage (PVCs, 25Gi)        $2-5
+Cloud DNS                   $0.40
+Data Transfer              $1-5
+────────────────────────────────────────────
+Total Estimated:           $150-180/month
+
+Cost Optimization Tips:
+   • Use preemptible nodes (-70% cost): $15-25/month
+   • Use e2-medium machines: $30-45/month
+   • Reduce storage: $1-2/month
+   • Optimized total: $50-75/month
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📚 USEFUL COMMANDS
+
+Deployment Management:
+   $ helm list -n vht-community
+   $ helm upgrade vht-platform ./helm/vht-platform -n vht-community
+   $ kubectl set image deployment/vht-platform vht-platform=IMAGE:TAG -n vht-community
+
+Pod Management:
+   $ kubectl logs -n vht-community -l app=vht-platform -f
+   $ kubectl exec -it POD_NAME -n vht-community -- /bin/sh
+   $ kubectl describe pod POD_NAME -n vht-community
+
+Scaling:
+   $ kubectl scale deployment vht-platform --replicas=5 -n vht-community
+   $ kubectl top pods -n vht-community
+
+Debugging:
+   $ kubectl get events -n vht-community
+   $ kubectl port-forward svc/vht-platform-service 8080:80 -n vht-community
+   $ kubectl port-forward svc/vht-postgres-service 5432:5432 -n vht-community
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📖 DOCUMENTATION
+
+Complete Guides:
+   • KUBERNETES_DEPLOYMENT.md - Full deployment guide
+   • README.md                - Project overview
+   • DEPLOYMENT.md            - GCP setup
+   • CICD_SETUP.md            - GitHub Actions
+
+Quick References:
+   • k8s-deploy.sh           - One-command deployment
+   • Dockerfile              - Container specifications
+   • values.yaml             - Helm configuration
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ DEPLOYMENT CHECKLIST
+
+Pre-Deployment:
+   ☐ GCP project ready
+   ☐ All tools installed
+   ☐ Service account created
+   ☐ terraform.tfvars configured
+   ☐ Docker image registry ready
+
+Deployment:
+   ☐ Terraform applied successfully
+   ☐ GKE cluster created (3 nodes)
+   ☐ kubectl authenticated
+   ☐ Helm chart deployed
+   ☐ All pods running
+   ☐ Services available
+   ☐ Ingress configured
+
+Post-Deployment:
+   ☐ Health checks passing
+   ☐ Logs monitoring
+   ☐ HPA configured
+   ☐ Network policies enabled
+   ☐ Backups configured
+   ☐ Monitoring setup
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎉 YOU'RE READY TO DEPLOY TO KUBERNETES!
+
+Next Steps:
+1. Review KUBERNETES_DEPLOYMENT.md for detailed instructions
+2. Configure terraform.tfvars with your GCP details
+3. Run k8s-deploy.sh or follow manual steps
+4. Monitor deployment: kubectl get pods -n vht-community
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Built with ❤️ for community empowerment in Uganda
+VHT Community Learning Platform - Kubernetes Edition
+Author: Charles Herbert Matovu | Created: 2025
+
+═══════════════════════════════════════════════════════════════════════════════

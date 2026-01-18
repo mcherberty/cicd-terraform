@@ -1,0 +1,19 @@
+apiVersion: v2
+name: vht-platform
+description: A Helm chart for VHT Community Learning Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+home: https://github.com/vht-learning/platform
+sources:
+  - https://github.com/vht-learning/platform
+maintainers:
+  - name: Charles Herbert Matovu
+    email: charles@vht-learning.com
+keywords:
+  - vht
+  - community
+  - learning
+  - kubernetes
+  - uganda
+icon: https://vht-learning.example.com/icon.png

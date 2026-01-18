@@ -1,0 +1,26 @@
+# Docker build context ignore file
+
+node_modules/
+npm-debug.log*
+.git
+.gitignore
+.terraform
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+.env
+.env.local
+coverage/
+dist/
+build/
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+.tflint.hcl
+.github/
+docker-compose.yml
+Dockerfile.dev
+*.md
+LICENSE

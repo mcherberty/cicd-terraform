@@ -1,0 +1,150 @@
+# Default values for vht-platform
+# Author: Charles Herbert Matovu
+# Year: 2025
+
+replicaCount: 3
+
+image:
+  repository: gcr.io/vht-learning-platform/vht-platform
+  pullPolicy: Always
+  tag: latest
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "3000"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 3000
+  annotations: {}
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: vht-learning.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: vht-platform-tls
+      hosts:
+        - vht-learning.example.com
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 9
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 2
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - vht-platform
+          topologyKey: kubernetes.io/hostname
+
+config:
+  NODE_ENV: production
+  PORT: "3000"
+  LOG_LEVEL: info
+  REDIS_HOST: vht-redis-service
+  REDIS_PORT: "6379"
+  DATABASE_HOST: vht-postgres-service
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: vht_community
+  PLATFORM_NAME: "VHT Community Learning Platform"
+  PLATFORM_AUTHOR: "Charles Herbert Matovu"
+  PLATFORM_YEAR: "2025"
+
+secrets:
+  DATABASE_USER: vht_user
+  DATABASE_PASSWORD: vht_password
+  SECRET_KEY: "change-me-in-production"
+  API_KEY: "change-me-in-production"
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 5Gi
+
+postgresql:
+  enabled: true
+  auth:
+    username: vht_user
+    password: vht_password
+    database: vht_community
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    path: /metrics

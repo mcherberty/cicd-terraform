@@ -1,0 +1,12 @@
+gcp_project_id = "YOUR_GCP_PROJECT_ID"
+gcp_region     = "us-central1"
+bucket_name    = "vht-learning-platform-dev"
+environment    = "dev"
+force_destroy  = true
+
+labels = {
+  author       = "Charles Herbert Matovu"
+  created_year = "2025"
+  project_type = "community-learning-platform"
+  team         = "vht-networks"
+}
