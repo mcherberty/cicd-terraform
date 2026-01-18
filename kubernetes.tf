@@ -2,28 +2,36 @@
 # Creates a 3-node K8s cluster for VHT Community Learning Platform
 
 resource "google_container_cluster" "vht_k8s_cluster" {
-  name       = "${var.cluster_name}-${var.environment}"
-  location   = var.gcp_region
-  project    = var.gcp_project_id
+  name     = "${var.cluster_name}-${var.environment}"
+  location = var.gcp_region
+  project  = var.gcp_project_id
 
   # Remove default node pool
   remove_default_node_pool = true
   initial_node_count       = 1
 
-  network       = google_compute_network.vht_network.name
-  subnetwork    = google_compute_subnetwork.vht_subnet.name
+  network    = google_compute_network.vht_network.name
+  subnetwork = google_compute_subnetwork.vht_subnet.name
 
   # Cluster settings
-  enable_shielded_nodes       = true
-  enable_ip_allocation_policy = true
-  networking_mode             = "VPC_NATIVE"
+  enable_shielded_nodes = true
+  networking_mode       = "VPC_NATIVE"
+
+  # IP allocation policy for VPC-native networking
+  ip_allocation_policy {
+    cluster_secondary_range_name  = "pods"
+    services_secondary_range_name = "services"
+  }
 
   # Logging and monitoring
   logging_service    = "logging.googleapis.com/kubernetes"
   monitoring_service = "monitoring.googleapis.com/kubernetes"
 
   # Security
-  enable_network_policy = true
+  network_policy {
+    enabled  = true
+    provider = "PROVIDER_UNSPECIFIED"
+  }
 
   master_auth {
     client_certificate_config {
@@ -37,9 +45,9 @@ resource "google_container_cluster" "vht_k8s_cluster" {
     }
   }
 
-  labels = {
+  resource_labels = {
     project     = "vht-learning-platform"
-    author      = "Charles Herbert Matovu"
+    author      = "charles-herbert-matovu"
     environment = var.environment
     created_by  = "terraform"
   }
@@ -47,11 +55,11 @@ resource "google_container_cluster" "vht_k8s_cluster" {
 
 # Node pool with 3 nodes
 resource "google_container_node_pool" "vht_node_pool" {
-  name           = "${var.cluster_name}-node-pool"
-  location       = var.gcp_region
-  cluster        = google_container_cluster.vht_k8s_cluster.name
-  node_count     = var.kubernetes_node_count
-  project        = var.gcp_project_id
+  name       = "${var.cluster_name}-node-pool"
+  location   = var.gcp_region
+  cluster    = google_container_cluster.vht_k8s_cluster.name
+  node_count = var.kubernetes_node_count
+  project    = var.gcp_project_id
 
   autoscaling {
     min_node_count = var.kubernetes_node_count
